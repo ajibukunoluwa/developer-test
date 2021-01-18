@@ -1951,6 +1951,14 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "CSVGenerator",
   data: function data() {
@@ -1958,45 +1966,113 @@ __webpack_require__.r(__webpack_exports__);
       data: [{
         first_name: 'John',
         last_name: 'Doe',
-        emailAddress: 'john.doe@example.com'
+        email_address: 'john.doe@example.com'
       }, {
         first_name: 'John',
         last_name: 'Doe',
-        emailAddress: 'john.doe@example.com'
+        email_address: 'john.doe@example.com'
       }],
       columns: [{
-        key: 'first_name'
+        key: 'first_name',
+        title: 'First Name'
       }, {
-        key: 'last_name'
+        key: 'last_name',
+        title: 'Last Name'
       }, {
-        key: 'emailAddress'
-      }]
+        key: 'email_address',
+        title: 'Email Address'
+      }],
+      defaultInputFieldValue: '',
+      defaultNewColumnTitle: 'New Column',
+      duplicateRecordSuffix: 2
     };
   },
   methods: {
-    add_row: function add_row() {// Add new row to data with column keys
-    },
-    remove_row: function remove_row(row_index) {// remove the given row
-    },
-    add_column: function add_column() {},
-    updateColumnKey: function updateColumnKey(column, event) {
-      var oldKey = column.key;
-      var columnKeyExists = !!this.columns.find(function (column) {
-        return column.key === event.target.value;
+    addRow: function addRow() {
+      var _this = this;
+
+      var newRow = {};
+      this.columns.forEach(function (column) {
+        newRow[column.key] = _this.defaultInputFieldValue;
       });
-      column.key = event.target.value;
+      this.data.push(newRow);
+    },
+    removeRow: function removeRow(rowIndex) {
+      var proceedToDelete = confirm("Are you sure you want to delete this row?");
+
+      if (proceedToDelete === true) {
+        this.data.splice(rowIndex, 1);
+      }
+    },
+    addColumn: function addColumn() {
+      var _this2 = this;
+
+      var newColumnTitle = this.defaultNewColumnTitle;
+      var newColumnKey = this.toSnakeCase(newColumnTitle);
+
+      if (this.columnKeyExists(newColumnKey)) {
+        newColumnKey = "".concat(newColumnKey, "_").concat(this.duplicateRecordSuffix);
+        newColumnTitle = "".concat(newColumnTitle, " ").concat(this.duplicateRecordSuffix);
+        this.duplicateRecordSuffix++;
+      }
+
+      var newColumn = {
+        key: newColumnKey,
+        title: newColumnTitle
+      };
+      this.columns.push(newColumn);
+      this.data.forEach(function (row) {
+        row[newColumnKey] = _this2.defaultInputFieldValue;
+      });
+    },
+    updateColumnKey: function updateColumnKey(column, event) {
+      var _this3 = this;
+
+      var oldColumns = this.columns;
+      var oldTitle = column.title;
+      var oldKey = column.key;
+      var newTitle = event.target.value;
+      var newKey = this.toSnakeCase(newTitle);
+      var columnKeyExists = this.columnKeyExists(newKey);
+      column.key = newKey;
+      column.title = newTitle;
 
       if (columnKeyExists) {
-        column.key = event.target.value.substring(0, event.target.value.length - 1);
+        column.key = newKey.substring(0, newKey.length - 1);
+        column.title = newTitle.substring(0, newTitle.length - 1);
         return;
       }
 
-      this.data.forEach(function (row) {
-        if (row[oldKey]) {
-          row[column.key] = row[oldKey];
-          delete row[oldKey];
+      this.data.forEach(function (row, index) {
+        var newRow = {}; // ========================================================
+        // NB: This logic below was written to stop the input files
+        // from switching positons when changes are made to the columns
+        // ========================================================
+        // STEPS
+        // Loop through the present row,
+        // replace the old key with the new key
+        // keep previous keys and their value
+
+        for (var key in row) {
+          if (row.hasOwnProperty(key)) {
+            if (oldKey === key) {
+              newRow[newKey] = row[key];
+            } else {
+              newRow[key] = row[key];
+            }
+          }
         }
+
+        _this3.data[index] = newRow;
       });
+    },
+    columnKeyExists: function columnKeyExists(newKey) {
+      return !!this.columns.find(function (column) {
+        return column.key === newKey;
+      });
+    },
+    toSnakeCase: function toSnakeCase(word) {
+      return word.toLowerCase().replace(/ /g, "_");
     },
     submit: function submit() {
       return axios.patch('/api/csv-export', this.data);
@@ -56815,70 +56891,133 @@ var render = function() {
               _c("thead", [
                 _c(
                   "tr",
-                  _vm._l(_vm.columns, function(column) {
-                    return _c("th", [
-                      _c("input", {
-                        staticClass: "form-control",
-                        attrs: { type: "text" },
-                        domProps: { value: column.key },
-                        on: {
-                          input: function($event) {
-                            return _vm.updateColumnKey(column, $event)
-                          }
-                        }
-                      })
-                    ])
-                  }),
-                  0
-                )
-              ]),
-              _vm._v(" "),
-              _c(
-                "tbody",
-                _vm._l(_vm.data, function(row) {
-                  return _c(
-                    "tr",
-                    _vm._l(row, function(dataColumn, columnName) {
-                      return _c("td", [
+                  [
+                    _vm._l(_vm.columns, function(column, index) {
+                      return _c("th", { key: index }, [
                         _c("input", {
-                          directives: [
-                            {
-                              name: "model",
-                              rawName: "v-model",
-                              value: row[columnName],
-                              expression: "row[columnName]"
-                            }
-                          ],
                           staticClass: "form-control",
                           attrs: { type: "text" },
-                          domProps: { value: row[columnName] },
+                          domProps: { value: column.title },
                           on: {
                             input: function($event) {
-                              if ($event.target.composing) {
-                                return
-                              }
-                              _vm.$set(row, columnName, $event.target.value)
+                              return _vm.updateColumnKey(column, $event)
                             }
                           }
                         })
                       ])
                     }),
+                    _vm._v(" "),
+                    _c("th")
+                  ],
+                  2
+                )
+              ]),
+              _vm._v(" "),
+              _vm.data.length
+                ? _c(
+                    "tbody",
+                    _vm._l(_vm.data, function(row, index) {
+                      return _c(
+                        "tr",
+                        { key: index },
+                        [
+                          _vm._l(row, function(dataColumn, columnName) {
+                            return _c("td", { key: columnName }, [
+                              _c("input", {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: row[columnName],
+                                    expression: "row[columnName]"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                attrs: {
+                                  type: "text",
+                                  placeholder: columnName
+                                },
+                                domProps: { value: row[columnName] },
+                                on: {
+                                  input: function($event) {
+                                    if ($event.target.composing) {
+                                      return
+                                    }
+                                    _vm.$set(
+                                      row,
+                                      columnName,
+                                      $event.target.value
+                                    )
+                                  }
+                                }
+                              })
+                            ])
+                          }),
+                          _vm._v(" "),
+                          _c("td", [
+                            _c(
+                              "button",
+                              {
+                                staticClass: "btn btn-sm btn-danger",
+                                attrs: { type: "button" },
+                                on: {
+                                  click: function($event) {
+                                    return _vm.removeRow(index)
+                                  }
+                                }
+                              },
+                              [_vm._v("Delete")]
+                            )
+                          ])
+                        ],
+                        2
+                      )
+                    }),
                     0
                   )
-                }),
-                0
-              )
+                : _vm._e()
             ]),
+            _vm._v(" "),
+            !_vm.data.length
+              ? _c(
+                  "div",
+                  {
+                    staticClass: "alert alert-secondary",
+                    attrs: { role: "alert" }
+                  },
+                  [
+                    _vm._v(
+                      "\n                        No records to show here. Kindly click on the add row button to begin!\n                    "
+                    )
+                  ]
+                )
+              : _vm._e(),
             _vm._v(" "),
             _c(
               "button",
-              { staticClass: "btn btn-secondary", attrs: { type: "button" } },
+              {
+                staticClass: "btn btn-secondary",
+                attrs: { type: "button" },
+                on: {
+                  click: function($event) {
+                    return _vm.addColumn()
+                  }
+                }
+              },
               [_vm._v("Add Column")]
             ),
             _vm._v(" "),
             _c(
               "button",
-              { staticClass: "btn btn-secondary", attrs: { type: "button" } },
+              {
+                staticClass: "btn btn-secondary",
+                attrs: { type: "button" },
+                on: {
+                  click: function($event) {
+                    return _vm.addRow()
+                  }
+                }
+              },
               [_vm._v("Add Row")]
             )
           ]),
@@ -69273,8 +69412,8 @@ __webpack_require__.r(__webpack_exports__);
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(/*! /home/kyle/fu3e/developer-test/resources/js/app.js */"./resources/js/app.js");
-module.exports = __webpack_require__(/*! /home/kyle/fu3e/developer-test/resources/sass/app.scss */"./resources/sass/app.scss");
+__webpack_require__(/*! /Users/ajimoti/Documents/ajimoti_projects/developer-test/resources/js/app.js */"./resources/js/app.js");
+module.exports = __webpack_require__(/*! /Users/ajimoti/Documents/ajimoti_projects/developer-test/resources/sass/app.scss */"./resources/sass/app.scss");
 
 
 /***/ })

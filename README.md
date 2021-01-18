@@ -19,6 +19,7 @@ In addition to the above tasks being complete, we will be looking out for
 ### Setup
 
 - `npm install && npm run watch`
+- `composer install`
 - `php artisan serve --port=8085`
 - Visit http://localhost:8085
 
