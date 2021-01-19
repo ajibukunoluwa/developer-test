@@ -25,7 +25,7 @@ trait RowValidation
             $attributes = ['rows'  => 'rows'];
 
             foreach ($this->columns as $column) {
-                $attributes["rows.*.{$column['key']}"] = $column['title'];
+                $attributes["rows.*.{$column['key']}"] = strtolower($column['title']);
             }
         }
 

@@ -253,12 +253,10 @@
             submit() {
                 this.isExporting = true;
 
-                return axios.patch('/api/csv-export',
-                    {
-                        columns: this.columns,
-                        rows: this.data
-                    }
-                ).then( response => {
+                return axios.patch('/api/csv-export', {
+                    columns: this.columns,
+                    rows: this.data
+                }).then( response => {
                     this.downloadFile(response.data);
                 }).catch(error => {
                     this.errors = {}

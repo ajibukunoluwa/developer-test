@@ -3,10 +3,8 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
-use App\Http\Services\CsvService;
+use Illuminate\Http\Response;
 use League\Csv\Reader as CsvReader;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class CsvExportTest extends TestCase
 {
@@ -110,6 +108,6 @@ class CsvExportTest extends TestCase
             "columns"  => $columns,
         ]);
 
-        return $response->assertStatus(422);
+        return $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 }
