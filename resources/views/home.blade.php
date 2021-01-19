@@ -24,6 +24,7 @@
             [v-cloak] { display: none; }
 
         </style>
+
     </head>
     <body>
         <div id="app">
@@ -50,8 +51,8 @@
     </body>
 </html>
 <script>
-    import CSVGenerator from "../js/components/CSVGenerator";
-    export default {
-        components: {CSVGenerator}
-    }
+    // import CSVGenerator from "../js/components/CSVGenerator";
+    // export default {
+    //     components: {CSVGenerator}
+    // }
 </script>

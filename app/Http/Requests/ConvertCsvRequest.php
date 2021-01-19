@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests;
 
+use App\Traits\Requests\RowValidation;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ConvertCsvRequest extends FormRequest
 {
+    use RowValidation;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -26,8 +29,7 @@ class ConvertCsvRequest extends FormRequest
         $defaultRules = [
             'columns' => 'required|array',
             'columns.*.key' => 'required',
-            'columns.*.title' => 'required',
-            'rows'  => 'required|array'
+            'columns.*.title' => 'required'
         ];
 
         return array_merge(
@@ -36,14 +38,22 @@ class ConvertCsvRequest extends FormRequest
         );
     }
 
-    private function rowKeysRules()
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function attributes()
     {
-        if (is_array($this->columns)) {
-            foreach ($this->columns as $column) {
-                $rules["rows.*.{$column['key']}"] = 'required';
-            }
-        }
+        $defaultAttributes = [
+            'columns' => 'column',
+            'columns.*.title' => 'column title',
+        ];
 
-        return $rules ?? [];
+        return array_merge(
+            $defaultAttributes,
+            $this->rowAttributes()
+        );
     }
+
 }

@@ -3,41 +3,35 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
-use Illuminate\Http\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use League\Csv\Writer as CsvWriter;
 
-class GenerateCSVAction {
-
-    const DELIMITER = ",";
-
-    private $file;
+class GenerateCsvAction
+{
 
     protected array $columns;
 
     protected array $rows;
 
+    /**
+     * @var  \League\Csv\Writer
+     */
+    private $csvWriter;
+
     public function __construct(array $columns, array $rows)
     {
         $this->columns = $columns;
         $this->rows = $rows;
+        $this->csvWriter = CsvWriter::createFromString('');
     }
 
-    public function execute()
+    public function execute(): CsvWriter
     {
-        $this->openFile();
-
         $this->addColumns();
 
         $this->addRows();
 
-        $this->closeFile();
+        return $this->csvWriter;
 
-        return $this->file;
-    }
-
-    private function openFile(): void
-    {
-        $this->file = fopen('php://output', 'w');
     }
 
     private function addColumns(): void
@@ -66,12 +60,7 @@ class GenerateCSVAction {
 
     private function addLine(array $data): void
     {
-        fputcsv($this->file, $data, self::DELIMITER);
-    }
-
-    private function closeFile()
-    {
-        fclose($this->file);
+        $this->csvWriter->insertOne($data);
     }
 
 }

@@ -27,6 +27,8 @@
                                             :placeholder="placeHolders[columnName]"
                                             v-model="row[columnName]"
                                     />
+                                    <div class="invalid-feedback force-display">{{ errors[`rows.${index}.${columnName}`] }}</div>
+
                                 </td>
                                 <td>
                                     <button type="button"
@@ -57,7 +59,7 @@
                         <button class="btn btn-primary"
                                 type="button"
                                 @click="submit()"
-                                :disabled="exporting"> {{ exporting ? 'Exporting' : 'Export'}}
+                                :disabled="isExporting || !data.length"> {{ isExporting ? 'Exporting' : 'Export'}}
                         </button>
                     </div>
                 </div>
@@ -101,10 +103,11 @@
                     },
 
                 ],
+                errors: {},
                 defaultInputFieldValue: '',
                 defaultNewColumnTitle: 'New Column',
                 duplicateRecordSuffix: 2,
-                exporting: false
+                isExporting: false
             }
         },
 
@@ -140,6 +143,14 @@
 
                 if (proceedToDelete === true) {
                     this.data.splice(rowIndex, 1);
+
+                    // Clear error messages for each
+                    // column in this row
+                    this.columns.forEach(
+                        (column) => {
+                            delete this.errors[`rows.${rowIndex}.${column['key']}`];
+                        }
+                    );
                 }
             },
 
@@ -167,37 +178,51 @@
             },
 
             updateColumnKey(column, event) {
-                let oldColumns = this.columns
+                let oldColumns = this.columns;
                 let oldTitle = column.title;
                 let oldKey = column.key;
-console.log(event, column)
+
                 let newTitle = event.target.value;
                 let newKey = this.toSnakeCase(newTitle);
 
+                // Check if the column key exists
+                // before making any change to the column
                 let columnKeyExists = this.columnKeyExists(newKey);
 
                 column.key = newKey;
                 column.title = newTitle;
-// console.log(columnKeyExists, oldKey, newKey, newTitle);
+
                 if (columnKeyExists) {
-                    column.key = newKey.substring(0, newKey.length - 1);
-                    column.title = newTitle.substring(0, newTitle.length - 1);
-                    console.log(column.key, column.title, '000000')
-                    return;
+                    newKey = newKey.substring(0, newKey.length - 1);
+                    newTitle = newTitle.substring(0, newTitle.length - 1);
+
+                    column.key = newKey;
+                    column.title = newTitle;
+
+                    if (! this.wasInsertedFromPaste(event)) {
+                        // Only return when the event triggered is not a past event
+                        // because paste events are usually triggered before the
+                        // binded input value is updated
+                        return;
+                    }
                 }
-// console.log(columnKeyExists, oldKey, newKey, newTitle, "ssssss");
+
+                this.updateColumnKeysInDataObject(oldKey, newKey);
+            },
+
+            updateColumnKeysInDataObject(oldKey, newKey) {
+                // ========================================================
+                // NB: The logic below was re-written to stop the input fields
+                // from switching position when a column is renamed
+                // ========================================================
+                // STEPS
+                // Loop through the present row,
+                // replace the old key with the new key
+                // keep previous keys and their value
+
                 this.data.forEach(
                     (row, index) => {
                         let newRow = {}
-
-                        // ========================================================
-                        // NB: The logic below was re-written to stop the input fields
-                        // from switching positon when the columns are renamed
-                        // ========================================================
-                        // STEPS
-                        // Loop through the present row,
-                        // replace the old key with the new key
-                        // keep previous keys and their value
                         for (var key in row) {
                             if (row.hasOwnProperty(key)) {
                                 if (oldKey === key) {
@@ -209,7 +234,6 @@ console.log(event, column)
                         }
 
                         this.data[index] = newRow
-
                     }
                 );
             },
@@ -222,46 +246,45 @@ console.log(event, column)
                 return word.toLowerCase().replace(/ /g,"_");
             },
 
+            wasInsertedFromPaste(event) {
+                return event.inputType === "insertFromPaste";
+            },
+
             submit() {
-                this.exporting = true
+                this.isExporting = true;
 
                 return axios.patch('/api/csv-export',
                     {
                         columns: this.columns,
                         rows: this.data
-                    },
-                    {
-                        responseType: 'stream',
-                        // contentType:
                     }
                 ).then( response => {
-                        // Handle success
-                        // var fs = require('fs');
-
-                        console.log(response)
-                        // console.log(response.body.getReader())
-
-                        // const reader = reader.body.getReader()
-                        // let data = []
-                        // return reader.read().then(read = (result)=>{
-                        //     if(result.done){
-                        //     return data
-                        //     }
-
-                        //     data.push(result.value)
-                        //     return reader.read().then(read)
-                        // })
-
+                    this.downloadFile(response.data);
+                }).catch(error => {
+                    this.errors = {}
+                    let errors = error.response.data.errors;
+                    for (const [key, error] of Object.entries(errors)) {
+                        this.errors[key] = error[0]
                     }
-                ).finally(() => this.exporting = false);
-            },
-        },
 
-        watch: {
+                }).finally(
+                    () => this.isExporting = false
+                );
+            },
+
+            downloadFile(data) {
+                const anchor = document.createElement('a');
+                anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(data);
+                anchor.target = '_blank';
+                anchor.download = 'f3groups_csv_generated_file.csv';
+                anchor.click();
+            }
         }
     }
 </script>
 
 <style scoped>
-
+    .force-display {
+        display: block;
+    }
 </style>
