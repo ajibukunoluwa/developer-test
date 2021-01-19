@@ -1984,7 +1984,8 @@ __webpack_require__.r(__webpack_exports__);
       }],
       defaultInputFieldValue: '',
       defaultNewColumnTitle: 'New Column',
-      duplicateRecordSuffix: 2
+      duplicateRecordSuffix: 2,
+      exporting: false
     };
   },
   methods: {
@@ -2075,7 +2076,30 @@ __webpack_require__.r(__webpack_exports__);
       return word.toLowerCase().replace(/ /g, "_");
     },
     submit: function submit() {
-      return axios.patch('/api/csv-export', this.data);
+      var _this4 = this;
+
+      this.exporting = true;
+      return axios.patch('/api/csv-export', {
+        columns: this.columns,
+        rows: this.data
+      }, {
+        responseType: 'stream'
+      }).then(function (response) {
+        // Handle success
+        // var fs = require('fs');
+        console.log(response); // console.log(response.body.getReader())
+        // const reader = reader.body.getReader()
+        // let data = []
+        // return reader.read().then(read = (result)=>{
+        //     if(result.done){
+        //     return data
+        //     }
+        //     data.push(result.value)
+        //     return reader.read().then(read)
+        // })
+      })["finally"](function () {
+        return _this4.exporting = false;
+      });
     }
   },
   watch: {}
@@ -57027,14 +57051,14 @@ var render = function() {
               "button",
               {
                 staticClass: "btn btn-primary",
-                attrs: { type: "button" },
+                attrs: { type: "button", disabled: _vm.exporting },
                 on: {
                   click: function($event) {
                     return _vm.submit()
                   }
                 }
               },
-              [_vm._v("Export")]
+              [_vm._v(_vm._s(_vm.exporting ? "Exporting" : "Export"))]
             )
           ])
         ])

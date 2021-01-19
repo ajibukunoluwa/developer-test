@@ -40,7 +40,7 @@
                     </div>
 
                     <div class="card-footer text-right">
-                        <button class="btn btn-primary" type="button" @click="submit()">Export</button>
+                        <button class="btn btn-primary" type="button" @click="submit()" :disabled="exporting">{{ exporting ? 'Exporting' : 'Export'}}</button>
                     </div>
                 </div>
             </div>
@@ -85,7 +85,8 @@
                 ],
                 defaultInputFieldValue: '',
                 defaultNewColumnTitle: 'New Column',
-                duplicateRecordSuffix: 2
+                duplicateRecordSuffix: 2,
+                exporting: false
             }
         },
 
@@ -189,7 +190,36 @@
             },
 
             submit() {
-                return axios.patch('/api/csv-export', this.data);
+                this.exporting = true
+
+                return axios.patch('/api/csv-export',
+                    {
+                        columns: this.columns,
+                        rows: this.data
+                    },
+                    {
+                        responseType: 'stream'
+                    }
+                ).then( response => {
+                        // Handle success
+                        // var fs = require('fs');
+
+                        console.log(response)
+                        // console.log(response.body.getReader())
+
+                        // const reader = reader.body.getReader()
+                        // let data = []
+                        // return reader.read().then(read = (result)=>{
+                        //     if(result.done){
+                        //     return data
+                        //     }
+
+                        //     data.push(result.value)
+                        //     return reader.read().then(read)
+                        // })
+
+                    }
+                ).finally(() => this.exporting = false);
             },
         },
 
