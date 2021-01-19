@@ -22,10 +22,17 @@
                             <tbody v-if="data.length">
                             <tr v-for="(row, index) in data" :key="index">
                                 <td v-for="(dataColumn, columnName) in row" :key="columnName">
-                                    <input type="text" class="form-control" :placeholder="columnName" v-model="row[columnName]"/>
+                                    <input type="text"
+                                            class="form-control"
+                                            :placeholder="placeHolders[columnName]"
+                                            v-model="row[columnName]"
+                                    />
                                 </td>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-danger" @click="removeRow(index)">Delete</button>
+                                    <button type="button"
+                                            class="btn btn-sm btn-danger"
+                                            @click="removeRow(index)"> Delete
+                                    </button>
                                 </td>
                             </tr>
                             </tbody>
@@ -35,12 +42,23 @@
                             No records to show here. Kindly click on the add row button to begin!
                         </div>
 
-                        <button type="button" class="btn btn-secondary" @click="addColumn()">Add Column</button>
-                        <button type="button" class="btn btn-secondary" @click="addRow()">Add Row</button>
+                        <button type="button"
+                                class="btn btn-secondary"
+                                @click="addColumn()">Add Column
+                        </button>
+
+                        <button type="button"
+                                class="btn btn-secondary"
+                                @click="addRow()">Add Row
+                        </button>
                     </div>
 
                     <div class="card-footer text-right">
-                        <button class="btn btn-primary" type="button" @click="submit()" :disabled="exporting">{{ exporting ? 'Exporting' : 'Export'}}</button>
+                        <button class="btn btn-primary"
+                                type="button"
+                                @click="submit()"
+                                :disabled="exporting"> {{ exporting ? 'Exporting' : 'Export'}}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -87,6 +105,20 @@
                 defaultNewColumnTitle: 'New Column',
                 duplicateRecordSuffix: 2,
                 exporting: false
+            }
+        },
+
+        computed: {
+            placeHolders() {
+                let placeHolders = {};
+
+                this.columns.forEach(
+                    (column) => {
+                        placeHolders[column.key] = column.title
+                    }
+                );
+
+                return placeHolders;
             }
         },
 
@@ -138,7 +170,7 @@
                 let oldColumns = this.columns
                 let oldTitle = column.title;
                 let oldKey = column.key;
-
+console.log(event, column)
                 let newTitle = event.target.value;
                 let newKey = this.toSnakeCase(newTitle);
 
@@ -146,20 +178,21 @@
 
                 column.key = newKey;
                 column.title = newTitle;
-
+// console.log(columnKeyExists, oldKey, newKey, newTitle);
                 if (columnKeyExists) {
                     column.key = newKey.substring(0, newKey.length - 1);
                     column.title = newTitle.substring(0, newTitle.length - 1);
+                    console.log(column.key, column.title, '000000')
                     return;
                 }
-
+// console.log(columnKeyExists, oldKey, newKey, newTitle, "ssssss");
                 this.data.forEach(
                     (row, index) => {
                         let newRow = {}
 
                         // ========================================================
-                        // NB: This logic below was written to stop the input files
-                        // from switching positons when changes are made to the columns
+                        // NB: The logic below was re-written to stop the input fields
+                        // from switching positon when the columns are renamed
                         // ========================================================
                         // STEPS
                         // Loop through the present row,
@@ -198,7 +231,8 @@
                         rows: this.data
                     },
                     {
-                        responseType: 'stream'
+                        responseType: 'stream',
+                        // contentType:
                     }
                 ).then( response => {
                         // Handle success

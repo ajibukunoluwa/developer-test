@@ -38,8 +38,10 @@ class ConvertCsvRequest extends FormRequest
 
     private function rowKeysRules()
     {
-        foreach ($this->columns as $column) {
-            $rules["rows.*.{$column['key']}"] = 'required';
+        if (is_array($this->columns)) {
+            foreach ($this->columns as $column) {
+                $rules["rows.*.{$column['key']}"] = 'required';
+            }
         }
 
         return $rules ?? [];

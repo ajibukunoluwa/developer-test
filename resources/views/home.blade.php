@@ -21,11 +21,13 @@
                 margin: 0;
             }
 
+            [v-cloak] { display: none; }
+
         </style>
     </head>
     <body>
         <div id="app">
-            <div class="container">
+            <div class="container" v-cloak>
                 <div class="row">
                     <div class="col">
                         <h1 class="mt-3">Developer test</h1>

@@ -15,14 +15,11 @@ class CsvExport extends Controller {
      */
     public function convert(ConvertCsvRequest $request)
     {
-// dd($request->all());
+        $request->validated();
+
         return response()->streamDownload(function () use ($request) {
             return (new GenerateCSVAction($request->columns, $request->rows))->execute();
         }, self::FILE_NAME);
 
-        // return [
-        //     'success' => false,
-        //     'data'  => $request->all()
-        // ];
     }
 }

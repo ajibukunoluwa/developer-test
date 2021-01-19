@@ -1959,6 +1959,24 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "CSVGenerator",
   data: function data() {
@@ -1987,6 +2005,15 @@ __webpack_require__.r(__webpack_exports__);
       duplicateRecordSuffix: 2,
       exporting: false
     };
+  },
+  computed: {
+    placeHolders: function placeHolders() {
+      var placeHolders = {};
+      this.columns.forEach(function (column) {
+        placeHolders[column.key] = column.title;
+      });
+      return placeHolders;
+    }
   },
   methods: {
     addRow: function addRow() {
@@ -2032,22 +2059,25 @@ __webpack_require__.r(__webpack_exports__);
       var oldColumns = this.columns;
       var oldTitle = column.title;
       var oldKey = column.key;
+      console.log(event, column);
       var newTitle = event.target.value;
       var newKey = this.toSnakeCase(newTitle);
       var columnKeyExists = this.columnKeyExists(newKey);
       column.key = newKey;
-      column.title = newTitle;
+      column.title = newTitle; // console.log(columnKeyExists, oldKey, newKey, newTitle);
 
       if (columnKeyExists) {
         column.key = newKey.substring(0, newKey.length - 1);
         column.title = newTitle.substring(0, newTitle.length - 1);
+        console.log(column.key, column.title, '000000');
         return;
-      }
+      } // console.log(columnKeyExists, oldKey, newKey, newTitle, "ssssss");
+
 
       this.data.forEach(function (row, index) {
         var newRow = {}; // ========================================================
-        // NB: This logic below was written to stop the input files
-        // from switching positons when changes are made to the columns
+        // NB: The logic below was re-written to stop the input fields
+        // from switching positon when the columns are renamed
         // ========================================================
         // STEPS
         // Loop through the present row,
@@ -2083,7 +2113,8 @@ __webpack_require__.r(__webpack_exports__);
         columns: this.columns,
         rows: this.data
       }, {
-        responseType: 'stream'
+        responseType: 'stream' // contentType:
+
       }).then(function (response) {
         // Handle success
         // var fs = require('fs');
@@ -56959,7 +56990,7 @@ var render = function() {
                                 staticClass: "form-control",
                                 attrs: {
                                   type: "text",
-                                  placeholder: columnName
+                                  placeholder: _vm.placeHolders[columnName]
                                 },
                                 domProps: { value: row[columnName] },
                                 on: {
@@ -56990,7 +57021,11 @@ var render = function() {
                                   }
                                 }
                               },
-                              [_vm._v("Delete")]
+                              [
+                                _vm._v(
+                                  " Delete\n                                "
+                                )
+                              ]
                             )
                           ])
                         ],
@@ -57028,7 +57063,7 @@ var render = function() {
                   }
                 }
               },
-              [_vm._v("Add Column")]
+              [_vm._v("Add Column\n                    ")]
             ),
             _vm._v(" "),
             _c(
@@ -57042,7 +57077,7 @@ var render = function() {
                   }
                 }
               },
-              [_vm._v("Add Row")]
+              [_vm._v("Add Row\n                    ")]
             )
           ]),
           _vm._v(" "),
@@ -57058,7 +57093,13 @@ var render = function() {
                   }
                 }
               },
-              [_vm._v(_vm._s(_vm.exporting ? "Exporting" : "Export"))]
+              [
+                _vm._v(
+                  " " +
+                    _vm._s(_vm.exporting ? "Exporting" : "Export") +
+                    "\n                    "
+                )
+              ]
             )
           ])
         ])
